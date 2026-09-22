@@ -11,11 +11,23 @@ import {
   GraduationCap,
   ShieldCheck,
   LogOut,
+  Library,
+  BarChart3,
+  Send,
+  Bot,
+  CreditCard,
+  LifeBuoy,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/admin/teachers", label: "O'qituvchilar", icon: GraduationCap },
+  { href: "/dashboard/admin/resources", label: "Resurslar bazasi", icon: Library },
+  { href: "/dashboard/admin/analytics", label: "Analitika", icon: BarChart3 },
+  { href: "/dashboard/admin/telegram", label: "Telegram Connection", icon: Send },
+  { href: "/dashboard/admin/ai-monitoring", label: "Sun'iy intellekt nazorati", icon: Bot },
+  { href: "/dashboard/admin/subscriptions", label: "Obuna to'lovlari", icon: CreditCard },
+  { href: "/dashboard/admin/support", label: "Qo'llab-quvvatlash", icon: LifeBuoy },
 ];
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
@@ -69,7 +81,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             open ? "w-64 translate-x-0" : "w-0 lg:w-0 -translate-x-full lg:translate-x-0"
           }`}
         >
-          <nav className="flex-1 p-3 space-y-1 w-64">
+          <nav className="flex-1 p-3 space-y-1 w-64 overflow-y-auto">
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
               const active = pathname === href;
               return (
