@@ -5,19 +5,23 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { GraduationCap, ShieldCheck } from "lucide-react";
 
+// Admin login maydoni email talab qilmaydi; ichki tizimda shu domen bilan
+// "soxta" email yaratiladi, chunki Supabase Auth email talab qiladi.
+const ADMIN_EMAIL_DOMAIN = "ustozpro.internal";
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const role = (searchParams.get("role") as "teacher" | "admin") || "teacher";
+  const isTeacher = role === "teacher";
 
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [emailOrLogin, setEmailOrLogin] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isTeacher = role === "teacher";
   const accent = isTeacher
     ? { text: "text-emerald-600", bg: "bg-emerald-600 hover:bg-emerald-700", ring: "focus:ring-emerald-500" }
     : { text: "text-blue-600", bg: "bg-blue-600 hover:bg-blue-700", ring: "focus:ring-blue-500" };
@@ -29,32 +33,45 @@ function LoginForm() {
     const supabase = createClient();
 
     try {
-      if (mode === "signup") {
-        const { data, error: signUpError } = await supabase.auth.signUp({
+      if (!isTeacher) {
+        // --- ADMIN: login + parol ---
+        const email = `${emailOrLogin.trim().toLowerCase()}@${ADMIN_EMAIL_DOMAIN}`;
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
-          options: { data: { full_name: fullName, role } },
+        });
+        if (signInError) throw new Error("Login yoki parol noto'g'ri");
+
+        router.push("/dashboard/admin");
+        router.refresh();
+        return;
+      }
+
+      // --- O'QITUVCHI: email + parol ---
+      if (mode === "signup") {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: emailOrLogin,
+          password,
+          options: { data: { full_name: fullName, role: "teacher" } },
         });
         if (signUpError) throw signUpError;
 
-        // profiles jadvaliga yozuv — RLS policy bunga ruxsat berishi kerak
-        // (qarang: README.md dagi SQL sxema)
         if (data.user) {
           await supabase.from("profiles").upsert({
             id: data.user.id,
             full_name: fullName,
-            role,
+            role: "teacher",
           });
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
+          email: emailOrLogin,
           password,
         });
         if (signInError) throw signInError;
       }
 
-      router.push(`/dashboard/${role}`);
+      router.push("/dashboard/teacher");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Xatolik yuz berdi");
@@ -75,28 +92,31 @@ function LoginForm() {
           </h1>
         </div>
         <p className="text-center text-slate-500 text-sm mb-6">
-          {isTeacher ? "O'qituvchi" : "Admin"} sifatida {mode === "signin" ? "kirish" : "ro'yxatdan o'tish"}
+          {isTeacher ? "O'qituvchi" : "Admin"} sifatida{" "}
+          {isTeacher ? (mode === "signin" ? "kirish" : "ro'yxatdan o'tish") : "kirish"}
         </p>
 
-        <div className="flex bg-slate-100 rounded-xl p-1 mb-6">
-          <button
-            type="button"
-            onClick={() => setMode("signin")}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${mode === "signin" ? "bg-white shadow text-slate-800" : "text-slate-500"}`}
-          >
-            Kirish
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("signup")}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${mode === "signup" ? "bg-white shadow text-slate-800" : "text-slate-500"}`}
-          >
-            Ro'yxatdan o'tish
-          </button>
-        </div>
+        {isTeacher && (
+          <div className="flex bg-slate-100 rounded-xl p-1 mb-6">
+            <button
+              type="button"
+              onClick={() => setMode("signin")}
+              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${mode === "signin" ? "bg-white shadow text-slate-800" : "text-slate-500"}`}
+            >
+              Kirish
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("signup")}
+              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${mode === "signup" ? "bg-white shadow text-slate-800" : "text-slate-500"}`}
+            >
+              Ro'yxatdan o'tish
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === "signup" && (
+          {isTeacher && mode === "signup" && (
             <div>
               <label className="block text-sm font-medium text-slate-600 mb-1">To'liq ism</label>
               <input
@@ -109,15 +129,19 @@ function LoginForm() {
               />
             </div>
           )}
+
           <div>
-            <label className="block text-sm font-medium text-slate-600 mb-1">Email</label>
+            <label className="block text-sm font-medium text-slate-600 mb-1">
+              {isTeacher ? "Email" : "Login"}
+            </label>
             <input
-              type="email"
+              type={isTeacher ? "email" : "text"}
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={emailOrLogin}
+              onChange={(e) => setEmailOrLogin(e.target.value)}
               className={`w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 ${accent.ring}`}
-              placeholder="siz@email.com"
+              placeholder={isTeacher ? "siz@email.com" : "login"}
+              autoCapitalize="none"
             />
           </div>
           <div>
@@ -144,7 +168,7 @@ function LoginForm() {
             disabled={loading}
             className={`w-full py-3 rounded-xl font-bold text-white transition-all ${accent.bg} disabled:opacity-60`}
           >
-            {loading ? "Iltimos kuting..." : mode === "signin" ? "Kirish" : "Ro'yxatdan o'tish"}
+            {loading ? "Iltimos kuting..." : isTeacher && mode === "signup" ? "Ro'yxatdan o'tish" : "Kirish"}
           </button>
         </form>
 

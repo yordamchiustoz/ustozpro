@@ -55,3 +55,41 @@ $$;
 create trigger trg_prevent_role_self_escalation
   before update on public.profiles
   for each row execute function public.prevent_role_self_escalation();
+
+-- ============================================================
+-- TEACHERS: Admin tomonidan boshqariladigan o'qituvchilar jadvali
+-- ============================================================
+
+create table if not exists public.teachers (
+  id uuid primary key default gen_random_uuid(),
+  full_name text not null,
+  phone text not null,
+  login text not null unique,
+  password text not null, -- ESLATMA: MVP uchun oddiy matn. Productionga chiqishdan
+                           -- oldin buni hash qilingan holda saqlash tavsiya etiladi.
+  subject text,
+  category text,
+  region text,
+  district text,
+  school_number text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.teachers enable row level security;
+
+-- Faqat 'admin' rolidagi foydalanuvchilar teachers jadvaliga to'liq
+-- kirish (o'qish, qo'shish, tahrirlash, o'chirish) huquqiga ega.
+create policy "teachers_admin_full_access"
+  on public.teachers for all
+  using (
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'admin'
+    )
+  );

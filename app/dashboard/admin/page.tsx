@@ -1,34 +1,92 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Users, TrendingUp, BookOpen, Activity } from "lucide-react";
+import { SubjectBarChart, CategoryPieChart } from "@/components/admin/DashboardCharts";
 
-export default async function AdminDashboard() {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
+  hint?: string;
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 p-5">
+      <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+        <Icon className="w-5 h-5" />
+      </div>
+      <p className="text-2xl font-extrabold text-slate-800">{value}</p>
+      <p className="text-sm text-slate-500 mt-0.5">{label}</p>
+      {hint && <p className="text-xs text-slate-400 mt-2">{hint}</p>}
+    </div>
+  );
+}
+
+export default async function AdminDashboardPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login?role=admin");
+  const { data: teachers } = await supabase
+    .from("teachers")
+    .select("subject, category");
 
-  // Haqiqiy admin ekanligini profiles jadvalidan tekshirish
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const teacherCount = teachers?.length ?? 0;
 
-  if (profile?.role !== "admin") redirect("/dashboard/teacher");
+  const subjectCounts = new Map<string, number>();
+  const categoryCounts = new Map<string, number>();
+  (teachers ?? []).forEach((t) => {
+    const subj = t.subject || "Belgilanmagan";
+    const cat = t.category || "Belgilanmagan";
+    subjectCounts.set(subj, (subjectCounts.get(subj) ?? 0) + 1);
+    categoryCounts.set(cat, (categoryCounts.get(cat) ?? 0) + 1);
+  });
+
+  const subjectData = Array.from(subjectCounts, ([name, count]) => ({ name, count }));
+  const categoryData = Array.from(categoryCounts, ([name, value]) => ({ name, value }));
 
   return (
-    <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-xl p-8 max-w-lg w-full text-center">
-        <h1 className="text-2xl font-extrabold text-slate-800 mb-2">
-          Admin panel
-        </h1>
-        <p className="text-slate-500">{user.email}</p>
-        <p className="text-sm text-slate-400 mt-4">
-          Bu yerda foydalanuvchilar va platforma sozlamalari boshqariladi.
-        </p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-extrabold text-slate-800">Dashboard</h1>
+        <p className="text-slate-500 text-sm mt-1">Platforma bo'yicha umumiy ko'rinish</p>
       </div>
-    </main>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard icon={Users} label="O'qituvchilar soni" value={teacherCount} />
+        <StatCard
+          icon={TrendingUp}
+          label="Kunlik kirishlar"
+          value="—"
+          hint="Analitika hali ulanmagan"
+        />
+        <StatCard
+          icon={BookOpen}
+          label="Fan resurslari"
+          value="—"
+          hint="Resurslar bo'limi hali qo'shilmagan"
+        />
+        <StatCard
+          icon={Activity}
+          label="Faol foydalanuvchilar"
+          value="—"
+          hint="Analitika hali ulanmagan"
+        />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <h2 className="font-bold text-slate-800 mb-1">Fanlar bo'yicha o'qituvchilar</h2>
+          <p className="text-xs text-slate-400 mb-2">Har bir fandagi o'qituvchilar soni</p>
+          <SubjectBarChart data={subjectData} />
+        </div>
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <h2 className="font-bold text-slate-800 mb-1">Toifalar bo'yicha taqsimot</h2>
+          <p className="text-xs text-slate-400 mb-2">O'qituvchilarning malaka toifalari</p>
+          <CategoryPieChart data={categoryData} />
+        </div>
+      </div>
+    </div>
   );
 }
