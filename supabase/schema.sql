@@ -1,8 +1,10 @@
--- UstozPro: to'liq SQL sxema (profiles + teachers)
+-- ============================================================
+-- UstozPro — TO'LIQ SQL SXEMA
 -- Supabase Dashboard -> SQL Editor ga joylashtirib ishga tushiring.
--- Bu skript qayta ishga tushirilsa ham xatosiz ishlaydi (idempotent).
+-- Bu skript qayta ishga tushirilsa ham (asosan) xatosiz ishlaydi.
+-- ============================================================
 
--- 1) Rol turi (agar mavjud bo'lmasa yaratiladi)
+-- 1) Rol turi
 do $$
 begin
   if not exists (select 1 from pg_type where typname = 'user_role') then
@@ -10,7 +12,7 @@ begin
   end if;
 end $$;
 
--- 2) PROFILES jadvali
+-- 2) PROFILES — har bir Supabase Auth foydalanuvchisi (admin + o'qituvchi)
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
@@ -53,13 +55,20 @@ create trigger trg_prevent_role_self_escalation
   before update on public.profiles
   for each row execute function public.prevent_role_self_escalation();
 
--- 3) TEACHERS jadvali (admin boshqaradigan o'qituvchilar)
-create table if not exists public.teachers (
-  id uuid primary key default gen_random_uuid(),
+-- 3) TEACHERS — o'qituvchi profili. id = shu o'qituvchining Supabase Auth ID'si
+--    (admin qo'shganda /api/admin/teachers orqali avtomatik yaratiladi).
+--    ESLATMA: agar avval boshqa tuzilishdagi 'teachers' jadvali yaratilgan
+--    bo'lsa, bu skript uni butunlay qayta yaratadi (mavjud qatorlar o'chadi).
+drop table if exists public.teachers cascade;
+
+create table public.teachers (
+  id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null,
   phone text not null,
   login text not null unique,
-  password text not null, -- ESLATMA: MVP uchun oddiy matn, keyin hash qilinsin
+  password text not null, -- ESLATMA: MVP uchun oddiy matn. Haqiqiy kirish
+                           -- Supabase Auth orqali amalga oshadi; bu maydon
+                           -- faqat admin panelida ko'rsatish/tahrirlash uchun.
   subject text,
   category text,
   region text,
@@ -70,7 +79,6 @@ create table if not exists public.teachers (
 
 alter table public.teachers enable row level security;
 
-drop policy if exists "teachers_admin_full_access" on public.teachers;
 create policy "teachers_admin_full_access" on public.teachers
   for all
   using (
@@ -80,10 +88,10 @@ create policy "teachers_admin_full_access" on public.teachers
     exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'admin')
   );
 
--- ============================================================
--- SUN'IY INTELLEKT (UstozAI): admin tomonidan ulanadigan AI sozlamalari
--- ============================================================
+create policy "teachers_select_own" on public.teachers
+  for select using (auth.uid() = id);
 
+-- 4) AI_SETTINGS — admin tomonidan ulanadigan AI (Gemini) sozlamalari
 create table if not exists public.ai_settings (
   id uuid primary key default gen_random_uuid(),
   provider text not null default 'gemini',
@@ -95,9 +103,6 @@ create table if not exists public.ai_settings (
 
 alter table public.ai_settings enable row level security;
 
--- Faqat admin ai_settings'ni ko'rishi va o'zgartirishi mumkin.
--- Muhim: teachers (o'qituvchilar) bu jadvalga umuman kira olmaydi —
--- API kalit faqat server tomonda (service_role orqali) o'qiladi.
 drop policy if exists "ai_settings_admin_only" on public.ai_settings;
 create policy "ai_settings_admin_only" on public.ai_settings
   for all
@@ -108,7 +113,7 @@ create policy "ai_settings_admin_only" on public.ai_settings
     exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'admin')
   );
 
--- UstozAI foydalanish tarixi (monitoring uchun)
+-- 5) AI_USAGE_LOGS — UstozAI foydalanish tarixi
 create table if not exists public.ai_usage_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid,
@@ -119,11 +124,13 @@ create table if not exists public.ai_usage_logs (
 
 alter table public.ai_usage_logs enable row level security;
 
--- Faqat admin tarixni ko'ra oladi. Yozish faqat server (service_role) orqali
--- amalga oshiriladi, shuning uchun oddiy foydalanuvchilar uchun insert policy yo'q.
 drop policy if exists "ai_usage_admin_read" on public.ai_usage_logs;
 create policy "ai_usage_admin_read" on public.ai_usage_logs
   for select
   using (
     exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'admin')
   );
+
+drop policy if exists "ai_usage_select_own" on public.ai_usage_logs;
+create policy "ai_usage_select_own" on public.ai_usage_logs
+  for select using (auth.uid() = user_id);

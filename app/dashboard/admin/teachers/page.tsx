@@ -29,16 +29,15 @@ export default function TeachersPage() {
   }, []);
 
   async function handleSave(teacher: Teacher) {
-    const supabase = createClient();
-    if (editing) {
-      const { error } = await supabase
-        .from("teachers")
-        .update(teacher)
-        .eq("id", editing.id);
-      if (error) throw error;
-    } else {
-      const { error } = await supabase.from("teachers").insert(teacher);
-      if (error) throw error;
+    const method = editing ? "PUT" : "POST";
+    const res = await fetch("/api/admin/teachers", {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editing ? { ...teacher, id: editing.id } : teacher),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Xatolik yuz berdi");
     }
     setModalOpen(false);
     setEditing(null);
@@ -47,8 +46,7 @@ export default function TeachersPage() {
 
   async function handleDelete(id: string) {
     if (!confirm("O'qituvchini o'chirishni tasdiqlaysizmi?")) return;
-    const supabase = createClient();
-    await supabase.from("teachers").delete().eq("id", id);
+    await fetch(`/api/admin/teachers/${id}`, { method: "DELETE" });
     loadTeachers();
   }
 

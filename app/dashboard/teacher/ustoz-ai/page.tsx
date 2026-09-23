@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import Link from "next/link";
-import { ArrowLeft, Sparkles, Send, Copy, Check, Loader2 } from "lucide-react";
+import { Sparkles, Send, Copy, Check, Loader2 } from "lucide-react";
 
 const SUGGESTIONS = [
   "5-sinf matematika fanidan 'Kasrlar' mavzusida dars ishlanma tuzib ber",
@@ -58,21 +57,8 @@ export default function UstozAiPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center px-4 gap-3 sticky top-0 z-10">
-        <Link
-          href="/dashboard/teacher"
-          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-white">
-          <Sparkles className="w-4.5 h-4.5" />
-        </div>
-        <span className="font-extrabold text-slate-800">UstozAI</span>
-      </header>
-
-      <div className="flex-1 max-w-2xl w-full mx-auto p-4 flex flex-col">
+    <div className="flex flex-col h-[calc(100vh-6rem)] sm:h-[calc(100vh-7rem)] -m-4 sm:-m-6">
+      <div className="flex-1 max-w-2xl w-full mx-auto p-4 flex flex-col min-h-0">
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
             <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center text-white mb-4">
@@ -173,6 +159,6 @@ export default function UstozAiPage() {
           </button>
         </form>
       </div>
-    </main>
+    </div>
   );
 }
