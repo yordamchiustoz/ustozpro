@@ -79,3 +79,51 @@ create policy "teachers_admin_full_access" on public.teachers
   with check (
     exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'admin')
   );
+
+-- ============================================================
+-- SUN'IY INTELLEKT (UstozAI): admin tomonidan ulanadigan AI sozlamalari
+-- ============================================================
+
+create table if not exists public.ai_settings (
+  id uuid primary key default gen_random_uuid(),
+  provider text not null default 'gemini',
+  api_key text not null,
+  model text not null default 'gemini-2.5-flash',
+  enabled boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.ai_settings enable row level security;
+
+-- Faqat admin ai_settings'ni ko'rishi va o'zgartirishi mumkin.
+-- Muhim: teachers (o'qituvchilar) bu jadvalga umuman kira olmaydi —
+-- API kalit faqat server tomonda (service_role orqali) o'qiladi.
+drop policy if exists "ai_settings_admin_only" on public.ai_settings;
+create policy "ai_settings_admin_only" on public.ai_settings
+  for all
+  using (
+    exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'admin')
+  )
+  with check (
+    exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'admin')
+  );
+
+-- UstozAI foydalanish tarixi (monitoring uchun)
+create table if not exists public.ai_usage_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid,
+  user_email text,
+  prompt_preview text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.ai_usage_logs enable row level security;
+
+-- Faqat admin tarixni ko'ra oladi. Yozish faqat server (service_role) orqali
+-- amalga oshiriladi, shuning uchun oddiy foydalanuvchilar uchun insert policy yo'q.
+drop policy if exists "ai_usage_admin_read" on public.ai_usage_logs;
+create policy "ai_usage_admin_read" on public.ai_usage_logs
+  for select
+  using (
+    exists (select 1 from public.profiles where profiles.id = auth.uid() and profiles.role = 'admin')
+  );
