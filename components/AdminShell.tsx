@@ -17,6 +17,8 @@ import {
   Bot,
   CreditCard,
   LifeBuoy,
+  Settings,
+  ClipboardCheck,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -28,6 +30,8 @@ const NAV_ITEMS = [
   { href: "/dashboard/admin/ai-monitoring", label: "Sun'iy intellekt nazorati", icon: Bot },
   { href: "/dashboard/admin/subscriptions", label: "Obuna to'lovlari", icon: CreditCard },
   { href: "/dashboard/admin/support", label: "Qo'llab-quvvatlash", icon: LifeBuoy },
+  { href: "/dashboard/admin/settings", label: "Admin sozlamalari", icon: Settings },
+  { href: "/dashboard/admin/attestation", label: "Attestatsiya sozlamalari", icon: ClipboardCheck },
 ];
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
