@@ -96,7 +96,7 @@ create table if not exists public.ai_settings (
   id uuid primary key default gen_random_uuid(),
   provider text not null default 'gemini',
   api_key text not null,
-  model text not null default 'gemini-2.5-flash',
+  model text not null default 'gemini-3.5-flash',
   enabled boolean not null default true,
   updated_at timestamptz not null default now()
 );

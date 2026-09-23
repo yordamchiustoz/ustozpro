@@ -65,7 +65,7 @@ export default async function AIMonitoringPage() {
         initial={{
           id: settingsRow?.id ?? null,
           api_key: settingsRow?.api_key ?? "",
-          model: settingsRow?.model ?? "gemini-2.5-flash",
+          model: settingsRow?.model ?? "gemini-3.5-flash",
           enabled: settingsRow?.enabled ?? true,
         }}
       />

@@ -5,8 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import { Eye, EyeOff, Save, CheckCircle2 } from "lucide-react";
 
 const MODELS = [
-  { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash (tavsiya etiladi)" },
-  { value: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash-Lite (tezroq, soddaroq)" },
+  { value: "gemini-3.5-flash", label: "Gemini 3.5 Flash (tavsiya etiladi)" },
+  { value: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite (tezroq, soddaroq)" },
+  { value: "gemini-2.5-pro", label: "Gemini 2.5 Pro (kuchliroq, sekinroq)" },
 ];
 
 export type AiSettings = {
