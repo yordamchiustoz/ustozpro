@@ -131,68 +131,77 @@ export default function TeacherModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-slate-600 mb-1">
-                Mutaxassisligi <span className="text-slate-400 font-normal">(ixtiyoriy)</span>
-              </label>
-              <select
-                value={form.subject}
-                onChange={(e) => set("subject", e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="">Tanlanmagan</option>
-                {SUBJECTS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-600 mb-1">
-                Toifasi <span className="text-slate-400 font-normal">(ixtiyoriy)</span>
-              </label>
-              <select
-                value={form.category}
-                onChange={(e) => set("category", e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="">Tanlanmagan</option>
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          {initial ? (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">
+                    Mutaxassisligi <span className="text-slate-400 font-normal">(ixtiyoriy)</span>
+                  </label>
+                  <select
+                    value={form.subject}
+                    onChange={(e) => set("subject", e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">Tanlanmagan</option>
+                    {SUBJECTS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">
+                    Toifasi <span className="text-slate-400 font-normal">(ixtiyoriy)</span>
+                  </label>
+                  <select
+                    value={form.category}
+                    onChange={(e) => set("category", e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">Tanlanmagan</option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-          <div className="pt-2 border-t border-slate-100">
-            <p className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wide">
-              Maktab ma'lumotlari (ixtiyoriy)
+              <div className="pt-2 border-t border-slate-100">
+                <p className="text-xs font-semibold text-slate-400 mb-3 uppercase tracking-wide">
+                  Maktab ma'lumotlari (ixtiyoriy)
+                </p>
+                <div className="space-y-3">
+                  <select
+                    value={form.region}
+                    onChange={(e) => set("region", e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">Viloyat tanlanmagan</option>
+                    {REGIONS.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                  <input
+                    value={form.district}
+                    onChange={(e) => set("district", e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Tuman"
+                  />
+                  <input
+                    value={form.school_number}
+                    onChange={(e) => set("school_number", e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Maktab raqami"
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="text-xs text-slate-400 bg-slate-50 rounded-xl px-4 py-3">
+              Mutaxassislik, toifa va maktab ma'lumotlarini o'qituvchining o'zi
+              birinchi marta tizimga kirganda to'ldiradi.
             </p>
-            <div className="space-y-3">
-              <select
-                value={form.region}
-                onChange={(e) => set("region", e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="">Viloyat tanlanmagan</option>
-                {REGIONS.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-              <input
-                value={form.district}
-                onChange={(e) => set("district", e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Tuman"
-              />
-              <input
-                value={form.school_number}
-                onChange={(e) => set("school_number", e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Maktab raqami"
-              />
-            </div>
-          </div>
+          )}
 
           {error && (
             <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">

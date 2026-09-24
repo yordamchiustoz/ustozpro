@@ -16,6 +16,7 @@ import {
   GraduationCap,
   LogOut,
 } from "lucide-react";
+import ProfileCompletionGate from "./teacher/ProfileCompletionGate";
 
 const NAV_ITEMS = [
   { href: "/dashboard/teacher", label: "Dashboard", icon: LayoutDashboard },
@@ -39,6 +40,7 @@ export default function TeacherShell({ children }: { children: React.ReactNode }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      <ProfileCompletionGate />
       <header className="h-16 bg-white border-b border-slate-200 flex items-center px-4 gap-3 sticky top-0 z-30">
         <button
           onClick={() => setOpen((v) => !v)}

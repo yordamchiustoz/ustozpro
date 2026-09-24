@@ -44,3 +44,7 @@ export const RESOURCE_SUBJECTS: ResourceSubject[] = [
 export function getSubjectBySlug(slug: string): ResourceSubject | undefined {
   return RESOURCE_SUBJECTS.find((s) => s.slug === slug);
 }
+
+export function getSubjectByName(name: string): ResourceSubject | undefined {
+  return RESOURCE_SUBJECTS.find((s) => s.name === name);
+}

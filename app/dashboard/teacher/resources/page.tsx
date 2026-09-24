@@ -1,37 +1,36 @@
-import Link from "next/link";
-import { BookOpen, ChevronRight } from "lucide-react";
-import { RESOURCE_SUBJECTS } from "@/lib/resource-subjects";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getSubjectByName } from "@/lib/resource-subjects";
+import { BookOpen } from "lucide-react";
 
-export default function ResourcesPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold text-slate-800">Resurslar bazasi</h1>
-        <p className="text-slate-500 text-sm mt-1">
-          Mutaxassislikni tanlang, so'ng tegishli sinfni ko'ring
+export default async function ResourcesEntryPage() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login?role=teacher");
+
+  const { data: teacher } = await supabase
+    .from("teachers")
+    .select("subject")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const resourceSubject = teacher?.subject ? getSubjectByName(teacher.subject) : null;
+
+  if (!resourceSubject) {
+    return (
+      <div className="max-w-md mx-auto text-center py-20">
+        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+          <BookOpen className="w-7 h-7" />
+        </div>
+        <p className="font-bold text-slate-700">Avval profilingizni to'ldiring</p>
+        <p className="text-sm text-slate-400 mt-1">
+          Mutaxassisligingizni tanlasangiz, shu fan resurslari shu yerda ko'rinadi.
         </p>
       </div>
+    );
+  }
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {RESOURCE_SUBJECTS.map((subject) => (
-          <Link
-            key={subject.slug}
-            href={`/dashboard/teacher/resources/${subject.slug}`}
-            className="flex items-center gap-3 bg-white rounded-2xl border border-slate-200 p-4 hover:border-emerald-300 hover:shadow-md transition-all group"
-          >
-            <div className="w-11 h-11 shrink-0 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-slate-800 truncate">{subject.name}</p>
-              <p className="text-xs text-slate-400">
-                {subject.grades[0]}–{subject.grades[subject.grades.length - 1]} sinflar
-              </p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 shrink-0" />
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
+  redirect(`/dashboard/teacher/resources/${resourceSubject.slug}`);
 }
